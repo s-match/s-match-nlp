@@ -1,10 +1,6 @@
 package it.unitn.disi.smatch.preprocessors;
 
-import it.unitn.disi.common.components.Configurable;
-import it.unitn.disi.common.components.ConfigurableException;
-import it.unitn.disi.common.components.ConfigurationKeyMissingException;
 import it.unitn.disi.nlptools.ILabelPipeline;
-import it.unitn.disi.nlptools.INLPTools;
 import it.unitn.disi.nlptools.components.PipelineComponentException;
 import it.unitn.disi.nlptools.data.ILabel;
 import it.unitn.disi.nlptools.data.IToken;
@@ -24,49 +20,34 @@ import java.util.*;
  *
  * @author <a rel="author" href="http://autayeu.com/">Aliaksandr Autayeu</a>
  */
-public class NLPToolsContextPreprocessor extends Configurable implements IContextPreprocessor {
+public class NLPToolsContextPreprocessor implements IContextPreprocessor {
 
     private static final Logger log = LoggerFactory.getLogger(NLPToolsContextPreprocessor.class);
 
-    private static final String NLPTOOLS_KEY = "nlp";
-
-    private INLPTools nlpTools;
-    private ILabelPipeline pipeline;
-
-    private final static String DCP_KEY = "dcp";
-    private DefaultContextPreprocessor dcp;
-
+    private final ILabelPipeline pipeline;
+    private final DefaultContextPreprocessor dcp;
     // flag to output the label being translated in logs
-    private final static String DEBUG_LABELS_KEY = "debugLabels";
-    private boolean debugLabels = false;
+    private final boolean debugLabels;
 
+    // TODO thread safe
     private int fallbackCount;
 
-    @Override
-    public boolean setProperties(Properties newProperties) throws ConfigurableException {
-        Properties oldProperties = new Properties();
-        oldProperties.putAll(properties);
+    public NLPToolsContextPreprocessor(ILabelPipeline pipeline) {
+        this.pipeline = pipeline;
+        this.debugLabels = false;
+        this.dcp = null;
+    }
 
-        boolean result = super.setProperties(newProperties);
-        if (result) {
-            if (newProperties.containsKey(DEBUG_LABELS_KEY)) {
-                debugLabels = Boolean.parseBoolean(newProperties.getProperty(DEBUG_LABELS_KEY));
-            }
+    public NLPToolsContextPreprocessor(ILabelPipeline pipeline, boolean debugLabels) {
+        this.pipeline = pipeline;
+        this.debugLabels = debugLabels;
+        this.dcp = null;
+    }
 
-            if (newProperties.containsKey(NLPTOOLS_KEY)) {
-                nlpTools = (INLPTools) configureComponent(nlpTools, oldProperties, newProperties, "NLPTools", NLPTOOLS_KEY, INLPTools.class);
-                pipeline = nlpTools.getPipeline();
-            } else {
-                throw new ConfigurationKeyMissingException(NLPTOOLS_KEY);
-            }
-
-            if (newProperties.containsKey(DCP_KEY)) {
-                dcp = (DefaultContextPreprocessor) configureComponent(dcp, oldProperties, newProperties, "DefaultContextPreprocessor", DCP_KEY, DefaultContextPreprocessor.class);
-            } else {
-                throw new ConfigurationKeyMissingException(DCP_KEY);
-            }
-        }
-        return result;
+    public NLPToolsContextPreprocessor(ILabelPipeline pipeline, DefaultContextPreprocessor dcp, boolean debugLabels) {
+        this.pipeline = pipeline;
+        this.dcp = dcp;
+        this.debugLabels = debugLabels;
     }
 
     public void preprocess(IContext context) throws ContextPreprocessorException {
@@ -81,9 +62,9 @@ public class NLPToolsContextPreprocessor extends Configurable implements IContex
             throw new ContextPreprocessorException(e.getMessage(), e);
         }
 
-        ArrayList<INode> queue = new ArrayList<INode>();
-        ArrayList<INode> pathToRoot = new ArrayList<INode>();
-        ArrayList<ILabel> pathToRootPhrases = new ArrayList<ILabel>();
+        List<INode> queue = new ArrayList<>();
+        List<INode> pathToRoot = new ArrayList<>();
+        List<ILabel> pathToRootPhrases = new ArrayList<>();
         queue.add(context.getRoot());
 
         while (!queue.isEmpty()) {
@@ -125,7 +106,7 @@ public class NLPToolsContextPreprocessor extends Configurable implements IContex
      * @return phrase instance for a current node label
      * @throws ContextPreprocessorException ContextPreprocessorException
      */
-    private ILabel processNode(INode currentNode, ArrayList<ILabel> pathToRootPhrases) throws ContextPreprocessorException {
+    private ILabel processNode(INode currentNode, List<ILabel> pathToRootPhrases) throws ContextPreprocessorException {
         if (debugLabels) {
             log.debug("preprocessing node: " + currentNode.getNodeData().getId() + ", label: " + currentNode.getNodeData().getName());
         }
@@ -153,7 +134,7 @@ public class NLPToolsContextPreprocessor extends Configurable implements IContex
             //create acols. one acol for each concept (meaningful) token
             //non-concept tokens should not make it up to a formula.
             String[] tokenIndexes = formula.split("[ ()&|~]");
-            Set<String> indexes = new HashSet<String>(Arrays.asList(tokenIndexes));
+            Set<String> indexes = new HashSet<>(Arrays.asList(tokenIndexes));
             List<IToken> tokens = result.getTokens();
             for (int i = 0; i < tokens.size(); i++) {
                 IToken token = tokens.get(i);
@@ -179,7 +160,7 @@ public class NLPToolsContextPreprocessor extends Configurable implements IContex
             if (log.isWarnEnabled()) {
                 log.warn("Falling back to heuristic parser for label (" + result.getText() + "): " + e.getMessage(), e);
                 fallbackCount++;
-                dcp.processNode(currentNode);
+                dcp.processNode(currentNode, new HashSet<String>());
             }
         }
         return result;

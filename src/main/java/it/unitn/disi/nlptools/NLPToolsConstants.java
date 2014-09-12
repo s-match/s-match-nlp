@@ -80,7 +80,7 @@ see Table 3 */
     /**
      * Maps POS tags to their descriptions.
      */
-    public final static HashMap<String, String> posDescriptions = new HashMap<String, String>(36);
+    public final static HashMap<String, String> posDescriptions = new HashMap<>(36);
 
     static {
         posDescriptions.put(COORDINATING_CON, "Coordinating conjunction");
@@ -159,7 +159,7 @@ see Table 3 */
             VERB_3PER_SING
     };
 
-    public static final HashSet<String> H_POS_OPEN_CLASS = new HashSet<String>(Arrays.asList(NLPToolsConstants.ARR_POS_OPEN_CLASS));
+    public static final HashSet<String> H_POS_OPEN_CLASS = new HashSet<>(Arrays.asList(NLPToolsConstants.ARR_POS_OPEN_CLASS));
 
 
     /**
@@ -274,7 +274,7 @@ see Table 3 */
             PUNC_RIGHT_CLOSE_DOUBLE_QUOTE
     };
 
-    public static final HashSet<String> H_POS_ALL = new HashSet<String>(Arrays.asList(NLPToolsConstants.ARR_POS_ALL));
+    public static final HashSet<String> H_POS_ALL = new HashSet<>(Arrays.asList(NLPToolsConstants.ARR_POS_ALL));
 
     //PennTrees
     public final static String P_ADJP = "ADJP";//adjective text
@@ -303,10 +303,10 @@ see Table 3 */
 
     //"meaningless" top labels
     public final static String[] ROOT_LABELS = {"Top", "Thing"};
-    public final static HashSet<String> H_ROOT_LABELS = new HashSet<String>(Arrays.asList(ROOT_LABELS));
+    public final static HashSet<String> H_ROOT_LABELS = new HashSet<>(Arrays.asList(ROOT_LABELS));
 
     public final static String[] WH_ADVERBS = {"when", "where", "why", "how"};
-    public static final HashSet<String> H_WH_ADVERBS = new HashSet<String>(Arrays.asList(NLPToolsConstants.WH_ADVERBS));
+    public static final HashSet<String> H_WH_ADVERBS = new HashSet<>(Arrays.asList(NLPToolsConstants.WH_ADVERBS));
 
 
     //COORDINATING CONJUNCTIONS: for and nor but or yet so (FANBOYS)
@@ -318,7 +318,7 @@ see Table 3 */
             "until", "when", "whenever", "whereas", "whether",
             "while", "yet"};
 
-    public static final HashSet<String> H_CONJUNCTIONS = new HashSet<String>(Arrays.asList(NLPToolsConstants.CONJUNCTIONS));
+    public static final HashSet<String> H_CONJUNCTIONS = new HashSet<>(Arrays.asList(NLPToolsConstants.CONJUNCTIONS));
 
     //almost all prepositions have a locational or temporal meaning.
     //Prepositions of Movement | Prepositions of Place | Prepositions of Time (point of time and length of time)
@@ -334,7 +334,7 @@ see Table 3 */
             "unlike", "until", "up", "upon", "versus", "via", "with",
             "within", "without"};
 
-    public static final HashSet<String> H_PREPOSITIONS = new HashSet<String>(Arrays.asList(NLPToolsConstants.PREPOSITIONS));
+    public static final HashSet<String> H_PREPOSITIONS = new HashSet<>(Arrays.asList(NLPToolsConstants.PREPOSITIONS));
 
     //In English the pronouns are classified as personal (I, we, you, thou, he, she, it, they),
     // demonstrative (this, these, that, those), relative (who, which, that, as), indefinite
@@ -348,14 +348,14 @@ see Table 3 */
             "his", "her", "our", "their", "myself", "herself", "themselves",
             "itself", "ourselves", "yourselves"};
 
-    public static final HashSet<String> H_PRONOUNS = new HashSet<String>(Arrays.asList(NLPToolsConstants.PRONOUNS));
+    public static final HashSet<String> H_PRONOUNS = new HashSet<>(Arrays.asList(NLPToolsConstants.PRONOUNS));
 
     //In grammar, the words a, an, and the, which precede a noun or its modifier.
     // The is the definite article; a and an are indefinite articles.
     public final static String[] ARTICLES = {"a", "an", "the"};//We don't use ' as a delimiter
-    public static final HashSet<String> H_ARTICLES = new HashSet<String>(Arrays.asList(NLPToolsConstants.ARTICLES));
+    public static final HashSet<String> H_ARTICLES = new HashSet<>(Arrays.asList(NLPToolsConstants.ARTICLES));
 
-    public static final HashSet<String> H_CLOSED_CLASS_TOKENS = new HashSet<String>();
+    public static final HashSet<String> H_CLOSED_CLASS_TOKENS = new HashSet<>();
 
     static {
         H_CLOSED_CLASS_TOKENS.addAll(H_WH_ADVERBS);
@@ -427,5 +427,5 @@ see Table 3 */
             NEI_MISC
     };
 
-    public static final HashSet<String> H_NE = new HashSet<String>(Arrays.asList(ARR_NE_ALL));
+    public static final HashSet<String> H_NE = new HashSet<>(Arrays.asList(ARR_NE_ALL));
 }

@@ -24,20 +24,17 @@ public class DMOZBNFParser extends LabelPipelineComponent implements ILabelPipel
 
     private static final Logger log = LoggerFactory.getLogger(DMOZBNFParser.class);
 
-    private DMOZBNFParser parser = null;
-
     //pattern to replace ", and" sequences. first comma is removed
     //regexp needed to preserve token indexes
     private final static Pattern ccCommaCCAnd = Pattern.compile("CC_,(\u005c\u005c|\u005c\u005cd+) CC_and(\u005c\u005c|\u005c\u005cd+)");
 
     public DMOZBNFParser() {
-        parser = new DMOZBNFParser(new StringReader(""));
     }
 
     public void process(ILabel label) throws PipelineComponentException {
         String initialPattern = preparePattern(label);
         String inputPattern = processCCs(initialPattern);
-        parser.ReInit(new StringReader(inputPattern));
+        DMOZBNFParser parser = new DMOZBNFParser(new StringReader(inputPattern));
         try {
             label.setFormula(parser.NL_Label());
         } catch (ParseException e) {
@@ -559,7 +556,7 @@ public class DMOZBNFParser extends LabelPipelineComponent implements ILabelPipel
             return (jj_ntk = jj_nt.kind);
     }
 
-    private java.util.List<int[]> jj_expentries = new java.util.ArrayList<int[]>();
+    private java.util.List<int[]> jj_expentries = new java.util.ArrayList<>();
     private int[] jj_expentry;
     private int jj_kind = -1;
 

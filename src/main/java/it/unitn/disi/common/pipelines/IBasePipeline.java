@@ -1,6 +1,5 @@
 package it.unitn.disi.common.pipelines;
 
-import it.unitn.disi.common.components.IConfigurable;
 import it.unitn.disi.nlptools.components.PipelineComponentException;
 
 /**
@@ -8,7 +7,7 @@ import it.unitn.disi.nlptools.components.PipelineComponentException;
  *
  * @author <a rel="author" href="http://autayeu.com/">Aliaksandr Autayeu</a>
  */
-public interface IBasePipeline<E> extends IConfigurable {
+public interface IBasePipeline<E> {
 
     /**
      * Processes an instance of E.

@@ -1,7 +1,5 @@
 package it.unitn.disi.nlptools.components.wsd;
 
-import it.unitn.disi.common.components.ConfigurableException;
-import it.unitn.disi.common.components.ConfigurationKeyMissingException;
 import it.unitn.disi.nlptools.components.PipelineComponentException;
 import it.unitn.disi.nlptools.data.ILabel;
 import it.unitn.disi.nlptools.data.IToken;
@@ -13,7 +11,6 @@ import it.unitn.disi.smatch.oracles.SenseMatcherException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Disambiguates senses using simple heuristics.
@@ -22,27 +19,14 @@ import java.util.Properties;
  */
 public class HeuristicWSD extends LabelPipelineComponent {
 
-    private static final String SENSE_MATCHER_KEY = "senseMatcher";
-    private ISenseMatcher senseMatcher = null;
+    private final ISenseMatcher senseMatcher;
 
-    @Override
-    public boolean setProperties(Properties newProperties) throws ConfigurableException {
-        Properties oldProperties = new Properties();
-        oldProperties.putAll(properties);
-
-        boolean result = super.setProperties(newProperties);
-        if (result) {
-            if (newProperties.containsKey(SENSE_MATCHER_KEY)) {
-                senseMatcher = (ISenseMatcher) configureComponent(senseMatcher, oldProperties, newProperties, "sense matcher", SENSE_MATCHER_KEY, ISenseMatcher.class);
-            } else {
-                throw new ConfigurationKeyMissingException(SENSE_MATCHER_KEY);
-            }
-        }
-        return result;
+    public HeuristicWSD(ISenseMatcher senseMatcher) {
+        this.senseMatcher = senseMatcher;
     }
 
     public void process(ILabel instance) throws PipelineComponentException {
-        HashMap<IToken, List<ISense>> refinedSenses = new HashMap<IToken, List<ISense>>();
+        HashMap<IToken, List<ISense>> refinedSenses = new HashMap<>();
 
         try {
             for (IToken sourceToken : instance.getTokens()) {
@@ -106,7 +90,7 @@ public class HeuristicWSD extends LabelPipelineComponent {
     private void addToRefinedSenses(HashMap<IToken, List<ISense>> refinedSenses, IToken token, ISense sense) {
         List<ISense> senses = refinedSenses.get(token);
         if (null == senses) {
-            senses = new ArrayList<ISense>();
+            senses = new ArrayList<>();
         }
         senses.add(sense);
         refinedSenses.put(token, senses);
