@@ -5,6 +5,7 @@ import it.unitn.disi.nlptools.components.PipelineComponentException;
 import it.unitn.disi.nlptools.data.ILabel;
 import it.unitn.disi.nlptools.data.IToken;
 import it.unitn.disi.nlptools.data.Label;
+import it.unitn.disi.smatch.async.AsyncTask;
 import it.unitn.disi.smatch.data.ling.IAtomicConceptOfLabel;
 import it.unitn.disi.smatch.data.ling.ISense;
 import it.unitn.disi.smatch.data.trees.IContext;
@@ -20,41 +21,42 @@ import java.util.*;
  *
  * @author <a rel="author" href="http://autayeu.com/">Aliaksandr Autayeu</a>
  */
-public class NLPToolsContextPreprocessor implements IContextPreprocessor {
+public class NLPToolsContextPreprocessor extends BaseContextPreprocessor implements IAsyncContextPreprocessor {
 
     private static final Logger log = LoggerFactory.getLogger(NLPToolsContextPreprocessor.class);
 
     private final ILabelPipeline pipeline;
     private final DefaultContextPreprocessor dcp;
-    // flag to output the label being translated in logs
-    private final boolean debugLabels;
 
-    // TODO thread safe
     private int fallbackCount;
 
     public NLPToolsContextPreprocessor(ILabelPipeline pipeline) {
+        super(null);
         this.pipeline = pipeline;
-        this.debugLabels = false;
         this.dcp = null;
     }
 
-    public NLPToolsContextPreprocessor(ILabelPipeline pipeline, boolean debugLabels) {
+    public NLPToolsContextPreprocessor(ILabelPipeline pipeline, IContext context) {
+        super(context);
         this.pipeline = pipeline;
-        this.debugLabels = debugLabels;
         this.dcp = null;
     }
 
-    public NLPToolsContextPreprocessor(ILabelPipeline pipeline, DefaultContextPreprocessor dcp, boolean debugLabels) {
+    public NLPToolsContextPreprocessor(ILabelPipeline pipeline, DefaultContextPreprocessor dcp) {
+        super(null);
         this.pipeline = pipeline;
         this.dcp = dcp;
-        this.debugLabels = debugLabels;
+    }
+
+    public NLPToolsContextPreprocessor(ILabelPipeline pipeline, DefaultContextPreprocessor dcp, IContext context) {
+        super(context);
+        this.pipeline = pipeline;
+        this.dcp = dcp;
     }
 
     public void preprocess(IContext context) throws ContextPreprocessorException {
         //go DFS, processing label-by-label, keeping path-to-root as context
         //process each text getting the formula
-
-        int processedCount = 0;
         fallbackCount = 0;
         try {
             pipeline.beforeProcessing();
@@ -69,13 +71,19 @@ public class NLPToolsContextPreprocessor implements IContextPreprocessor {
 
         while (!queue.isEmpty()) {
             INode currentNode = queue.remove(0);
+
+            if (Thread.currentThread().isInterrupted()) {
+                break;
+            }
+
             if (null == currentNode) {
                 pathToRoot.remove(pathToRoot.size() - 1);
                 pathToRootPhrases.remove(pathToRootPhrases.size() - 1);
             } else {
                 ILabel currentPhrase;
                 currentPhrase = processNode(currentNode, pathToRootPhrases);
-                processedCount++;
+
+                progress();
 
                 List<INode> children = currentNode.getChildrenList();
                 if (0 < children.size()) {
@@ -95,7 +103,12 @@ public class NLPToolsContextPreprocessor implements IContextPreprocessor {
         } catch (PipelineComponentException e) {
             throw new ContextPreprocessorException(e.getMessage(), e);
         }
-        log.info("Processed nodes: " + processedCount + ", fallbacks: " + fallbackCount);
+        log.info("Processed nodes: " + getProgress() + ", fallbacks: " + fallbackCount);
+    }
+
+    @Override
+    public AsyncTask<Void, INode> asyncPreprocess(IContext context) {
+        return new NLPToolsContextPreprocessor(pipeline, dcp, context);
     }
 
     /**
@@ -107,9 +120,7 @@ public class NLPToolsContextPreprocessor implements IContextPreprocessor {
      * @throws ContextPreprocessorException ContextPreprocessorException
      */
     private ILabel processNode(INode currentNode, List<ILabel> pathToRootPhrases) throws ContextPreprocessorException {
-        if (debugLabels) {
-            log.debug("preprocessing node: " + currentNode.getNodeData().getId() + ", label: " + currentNode.getNodeData().getName());
-        }
+        log.trace("preprocessing node: " + currentNode.getNodeData().getId() + ", label: " + currentNode.getNodeData().getName());
 
         // reset old preprocessing
         currentNode.getNodeData().setcLabFormula("");
