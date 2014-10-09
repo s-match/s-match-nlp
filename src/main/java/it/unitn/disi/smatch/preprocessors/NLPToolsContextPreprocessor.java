@@ -7,7 +7,6 @@ import it.unitn.disi.nlptools.data.IToken;
 import it.unitn.disi.nlptools.data.Label;
 import it.unitn.disi.smatch.async.AsyncTask;
 import it.unitn.disi.smatch.data.ling.IAtomicConceptOfLabel;
-import it.unitn.disi.smatch.data.ling.ISense;
 import it.unitn.disi.smatch.data.trees.IContext;
 import it.unitn.disi.smatch.data.trees.INode;
 import org.slf4j.Logger;
@@ -85,7 +84,7 @@ public class NLPToolsContextPreprocessor extends BaseContextPreprocessor impleme
 
                 progress();
 
-                List<INode> children = currentNode.getChildrenList();
+                List<INode> children = currentNode.getChildren();
                 if (0 < children.size()) {
                     queue.add(0, null);
                     pathToRoot.add(currentNode);
@@ -120,16 +119,14 @@ public class NLPToolsContextPreprocessor extends BaseContextPreprocessor impleme
      * @throws ContextPreprocessorException ContextPreprocessorException
      */
     private ILabel processNode(INode currentNode, List<ILabel> pathToRootPhrases) throws ContextPreprocessorException {
-        log.trace("preprocessing node: " + currentNode.getNodeData().getId() + ", label: " + currentNode.getNodeData().getName());
+        log.trace("preprocessing node: " + currentNode.nodeData().getId() + ", label: " + currentNode.nodeData().getName());
 
         // reset old preprocessing
-        currentNode.getNodeData().setcLabFormula("");
-        currentNode.getNodeData().setcNodeFormula("");
-        while (0 < currentNode.getNodeData().getACoLCount()) {
-            currentNode.getNodeData().removeACoL(0);
-        }
+        currentNode.nodeData().setLabelFormula("");
+        currentNode.nodeData().setNodeFormula("");
+        currentNode.nodeData().getConcepts().clear();
 
-        String label = currentNode.getNodeData().getName();
+        String label = currentNode.nodeData().getName();
         ILabel result = new Label(label);
         result.setContext(pathToRootPhrases);
         try {
@@ -140,9 +137,9 @@ public class NLPToolsContextPreprocessor extends BaseContextPreprocessor impleme
             // 1 & 2
             // 1 & (3 | 4)
             String formula = result.getFormula();
-            currentNode.getNodeData().setIsPreprocessed(true);
+            currentNode.nodeData().setIsPreprocessed(true);
 
-            //create acols. one acol for each concept (meaningful) token
+            //create concepts. one acol for each concept (meaningful) token
             //non-concept tokens should not make it up to a formula.
             String[] tokenIndexes = formula.split("[ ()&|~]");
             Set<String> indexes = new HashSet<>(Arrays.asList(tokenIndexes));
@@ -151,22 +148,20 @@ public class NLPToolsContextPreprocessor extends BaseContextPreprocessor impleme
                 IToken token = tokens.get(i);
                 String tokenIdx = Integer.toString(i);
                 if (indexes.contains(tokenIdx)) {
-                    IAtomicConceptOfLabel acol = currentNode.getNodeData().createACoL();
+                    IAtomicConceptOfLabel acol = currentNode.nodeData().createConcept();
                     acol.setId(i);
                     acol.setToken(token.getText());
                     acol.setLemma(token.getLemma());
-                    for (ISense sense : token.getSenses()) {
-                        acol.addSense(sense);
-                    }
-                    currentNode.getNodeData().addACoL(acol);
+                    acol.setSenses(token.getSenses());
+                    currentNode.nodeData().getConcepts().add(acol);
                 }
             }
 
             //prepend all token references with node id
-            formula = formula.replaceAll("(\\d+)", currentNode.getNodeData().getId() + ".$1");
+            formula = formula.replaceAll("(\\d+)", currentNode.nodeData().getId() + ".$1");
             formula = formula.trim();
             //set it to the node
-            currentNode.getNodeData().setcLabFormula(formula);
+            currentNode.nodeData().setLabelFormula(formula);
         } catch (PipelineComponentException e) {
             if (log.isWarnEnabled()) {
                 log.warn("Falling back to heuristic parser for label (" + result.getText() + "): " + e.getMessage(), e);
